@@ -54,7 +54,7 @@ jobs:
         if: steps.TestApp.outcome == 'failure'
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.MY_TOKEN }}
           script: |
             const { files } = ${JSON.stringify(changedFiles)}
             github.rest.issues.createComment({
