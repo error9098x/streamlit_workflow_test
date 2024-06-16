@@ -2,9 +2,9 @@ name: Streamlit app
 
 on:
   push:
-    branches: [ "main" ]  # Run on pushes to main branch
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]  # Run on pull requests to main branch
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -20,17 +20,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
+
       - name: Run ruff linter
         run: |
           pip install ruff
           ruff check .
-
+          
       - name: Run Streamlit App tests
         uses: streamlit/streamlit-app-action@v0.0.3
         with:
@@ -45,23 +45,44 @@ jobs:
           path: test-results.xml
           summary: true
           display-options: fEX
-        
-      - name: Get changed files
-        id: files
-        uses: jitterbit/get-changed-files@v1
 
-      - name: Post PR comment with test results
-        if: steps.TestApp.outcome == 'failure'
+      - name: Post results as comment
+        if: always()
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.MY_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { files } = ${JSON.stringify(changedFiles)}
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `The following test failed:\n\n${files.join('\n')}`
-            })
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
 
-          
+            const checkSuite = await github.checks.listSuitesForRef({
+              owner,
+              repo,
+              ref: context.sha
+            });
+
+            const checkSuiteId = checkSuite.data.check_suites[0].id;
+
+            const checks = await github.checks.listForSuite({
+              owner,
+              repo,
+              check_suite_id: checkSuiteId
+            });
+
+            const annotations = await github.checks.listAnnotations({
+              owner,
+              repo,
+              check_run_id: checks.data.check_runs[0].id
+            });
+
+            let summary = '### Test results\n\n';
+            for (const annotation of annotations.data) {
+              summary += `- ${annotation.path}:${annotation.start_line} - ${annotation.message}\n`;
+            }
+
+            await github.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: summary
+            });
