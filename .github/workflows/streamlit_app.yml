@@ -1,0 +1,67 @@
+name: Streamlit app
+
+on:
+  push:
+    branches: [ "main" ]  # Run on pushes to main branch
+  pull_request:
+    branches: [ "main" ]  # Run on pull requests to main branch
+
+permissions:
+  contents: read
+
+jobs:
+  streamlit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run ruff linter
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: Run Streamlit App tests
+        uses: streamlit/streamlit-app-action@v0.0.3
+        with:
+          app-path: streamlit_app.py
+          ruff: true
+          pytest-args: -v --junit-xml=test-results.xml
+
+      - name: Publish pytest results
+        if: always()
+        uses: pmeier/pytest-results-action@v0.6.0
+        with:
+          path: test-results.xml
+          summary: true
+          display-options: fEX
+        
+      - name: Get changed files
+        id: files
+        uses: jitterbit/get-changed-files@v1
+
+      - name: Post PR comment with test results
+        if: steps.TestApp.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { files } = ${JSON.stringify(changedFiles)}
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `The following test failed:\n\n${files.join('\n')}`
+            })
+
+          
