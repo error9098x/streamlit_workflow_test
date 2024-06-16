@@ -8,6 +8,7 @@ def main():
         st.write("This is the home page")
     elif page == "About":
         st.write("This is the about page")
+        st.write("This is a sample change for the PR.") 
 
 if __name__ == "__main__":
     main()
