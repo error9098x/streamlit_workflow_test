@@ -6,7 +6,7 @@ def main():
     
     if page == "Home":
         st.write("This is the home page")
-
+        st.write("This is the home page")
         st.write("this")
         st.write("This is a test")
 
