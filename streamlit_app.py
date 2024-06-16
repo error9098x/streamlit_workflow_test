@@ -9,6 +9,9 @@ def main():
 
         st.write("this")
         st.write("This is a test")
+        st.write("This is C test")
+        st.write("This is C test")
+
 
     elif page == "About":
         st.write("This is the about page")
