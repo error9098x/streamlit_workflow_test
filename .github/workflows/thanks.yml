@@ -11,4 +11,4 @@ jobs:
           message: |
             Thank you for your contribution. We aim to review it within 48 hours!            
           comment_includes: "Thank you"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
