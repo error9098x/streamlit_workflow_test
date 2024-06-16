@@ -6,6 +6,7 @@ def main():
     
     if page == "Home":
         st.write("This is the home page")
+        st.write("this")
     elif page == "About":
         st.write("This is the about page")
         st.write("This is a sample change for the PR.") 
